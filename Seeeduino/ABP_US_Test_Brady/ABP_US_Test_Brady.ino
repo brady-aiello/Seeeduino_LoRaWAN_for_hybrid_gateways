@@ -1,15 +1,17 @@
 #include "LoRaWan.h"
 #include "keys.h"
 
+//unsigned char data[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA,};
 //unsigned char data[10] = "Hey World";
-  unsigned char data[10] = "From Poly";
+//unsigned char data = 1;
+unsigned char frame_counter = 1;
 char buffer[256];
 
 
 void setup(void)
 {
     SerialUSB.begin(115200);
-    while(!SerialUSB);
+    while(!SerialUSB);     
     
     lora.init();
     lora.setDeviceDefault();
@@ -22,11 +24,14 @@ void setup(void)
     lora.getId(buffer, 256, 1);
     SerialUSB.print(buffer);
 
+    //void setId(char *DevAddr, char *DevEUI, char *AppEUI);
+    //void setKey(char *NwkSKey, char *AppSKey, char *AppKey);    
+
+    lora.setId(DEV_ADDR, DEV_EUI, APP_EUI);
     lora.setKey(NWK_S_KEY, APP_S_KEY, APP_KEY);
     
     lora.setDeciveMode(LWABP);
-    lora.setDataRate(DR3, US915);
-    lora.setAdaptiveDataRate(true);
+    lora.setDataRate(DR0, US915HYBRID);
 
     for(uint8_t i = 0; i < 72; i ++)lora.setChannel(i, 0);
     
@@ -38,14 +43,11 @@ void setup(void)
     lora.setChannel(5, 904.9, DR0, DR3);
     lora.setChannel(6, 905.1, DR0, DR3);
     lora.setChannel(7, 905.3, DR0, DR3);
-
-    //Turning this on gets "DR error"
-    //lora.setChannel(8, 904.6, DR4, DR4);
     
-    lora.setReceiceWindowFirst(0);
+    lora.setReceiceWindowFirst(1);
     lora.setReceiceWindowSecond(923.3, DR8);
     
-    lora.setPower(20);
+    lora.setPower(14);
 }
 
 void loop(void)
@@ -53,10 +55,13 @@ void loop(void)
     bool result = false;
     
     //result = lora.transferPacket("Hello", 5, 10);
-    result = lora.transferPacket(data, 10, 5);
+    
+    result = lora.transferPacket(&frame_counter, 1, 5);
     
     if(result)
     {
+        delay(50);
+        frame_counter++;
         short length;
         short rssi;
         
