@@ -1,6 +1,4 @@
-# Seeeduino-LoRaWAN-example
-
-
+# Seeeduino LoRaWAN for hybrid gateways
 
 These examples are meant for connecting a Seeeduino-LoRaWAN (with or without GPS) to a LoRaWAN gateway running the "The Things Network" packet forwarder (the new one using TCP and written in Go, here: https://github.com/TheThingsNetwork/packet_forwarder). 
 
