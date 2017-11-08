@@ -69,15 +69,9 @@ void setup(void)
     lora.setDeciveMode(LWABP);
     lora.setDataRate(DR0, US915HYBRID);
     lora.setPower(US_MAX_EIRP_NDX);
-    
-    //for(uint8_t i = 8; i < 72; i ++)lora.setChannel(i, 0);
     setHybridForTTN(US_hybrid_channels);
-    
     lora.setReceiceWindowFirst(1);
     lora.setReceiceWindowSecond(923.3, US_RX_DR);
-
-    //lora.setPower(14);
-    //lora.setPower(US_MAX_EIRP_NDX);
 }
 
 void setHybridForTTN(const float* channels){
