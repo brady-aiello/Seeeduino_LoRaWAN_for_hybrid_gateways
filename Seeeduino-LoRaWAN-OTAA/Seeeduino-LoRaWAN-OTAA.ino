@@ -1,4 +1,5 @@
-#include "LoRaWan.h"
+//#include "LoRaWan.h"
+#include<LoRaWan.h>
 #include "keys.h"
 
 #define FREQ_RX_WNDW_SCND_US  923.3
@@ -21,41 +22,41 @@ const float AS2_hybrid_channels[8] = {923.2, 923.4, 923.6, 923.8, 924.0, 924.2, 
 
 //United States Receive Window Data Rate = DR8
 #define DOWNLINK_DATA_RATE_US DR8
-//#define DOWNLINK_DATA_RATE_EU DR8
-//#define DOWNLINK_DATA_RATE_AU DR8
-//#define DOWNLINK_DATA_RATE_CN DR0
-//#define DOWNLINK_DATA_RATE_KR DR0
-//#define DOWNLINK_DATA_RATE_IN DR2
-//#define DOWNLINK_DATA_RATE_AS1 DR2
-//#define DOWNLINK_DATA_RATE_AS2 DR2
+/*#define DOWNLINK_DATA_RATE_EU DR8
+#define DOWNLINK_DATA_RATE_AU DR8
+#define DOWNLINK_DATA_RATE_CN DR0
+#define DOWNLINK_DATA_RATE_KR DR0
+#define DOWNLINK_DATA_RATE_IN DR2
+#define DOWNLINK_DATA_RATE_AS1 DR2
+#define DOWNLINK_DATA_RATE_AS2 DR2*/
 
 #define US_RX_DR DR8
-//#define EU_RX_DR DR8
-//#define AU_RX_DR DR8
-//#define CN_RX_DR DR0
-//#define KR_RX_DR DR0
-//#define IN_RX_DR DR2
-//#define AS1_RX_DR DR2
-//#define AS2_RX_DR DR2
+/*#define EU_RX_DR DR8
+#define AU_RX_DR DR8
+#define CN_RX_DR DR0
+#define KR_RX_DR DR0
+#define IN_RX_DR DR2
+#define AS1_RX_DR DR2
+#define AS2_RX_DR DR2*/
 
 //United States max data rate for uplink channels = DR3
 #define UPLINK_DATA_RATE_MAX_US  DR3
-//#define UPLINK_DATA_RATE_MAX_EU  DR5
-//#define UPLINK_DATA_RATE_MAX_AU  DR3
-//#define UPLINK_DATA_RATE_MAX_CN  DR5
-//#define UPLINK_DATA_RATE_MAX_KR  DR5
-//#define UPLINK_DATA_RATE_MAX_IN  DR5
-//#define UPLINK_DATA_RATE_MAX_AS1 DR5
-//#define UPLINK_DATA_RATE_MAX_AS2 DR5
+/*#define UPLINK_DATA_RATE_MAX_EU  DR5
+#define UPLINK_DATA_RATE_MAX_AU  DR3
+#define UPLINK_DATA_RATE_MAX_CN  DR5
+#define UPLINK_DATA_RATE_MAX_KR  DR5
+#define UPLINK_DATA_RATE_MAX_IN  DR5
+#define UPLINK_DATA_RATE_MAX_AS1 DR5
+#define UPLINK_DATA_RATE_MAX_AS2 DR5*/
 
 #define MAX_EIRP_NDX_US 13
-//#define MAX_EIRP_NDX_EU  2
-//#define MAX_EIRP_NDX_AU 13
-//#define MAX_EIRP_NDX_CN  7
-//#define MAX_EIRP_NDX_KR  4
-//#define MAX_EIRP_NDX_IN 13
-//#define MAX_EIRP_NDX AS1 5
-//#define MAX_EIRP_NDX_AS2 5
+/*#define MAX_EIRP_NDX_EU  2
+#define MAX_EIRP_NDX_AU 13
+#define MAX_EIRP_NDX_CN  7
+#define MAX_EIRP_NDX_KR  4
+#define MAX_EIRP_NDX_IN 13
+#define MAX_EIRP_NDX AS1 5
+#define MAX_EIRP_NDX_AS2 5*/
 
 //The min uplink data rate for all countries / plans is DR0
 #define UPLINK_DATA_RATE_MIN DR0
@@ -67,11 +68,12 @@ char buffer[256];
 
 void setup(void)
 {
-//    SerialUSB.begin(115200);
-//    while(!SerialUSB);     
+    SerialUSB.begin(115200);
+    while(!SerialUSB);     
     
     lora.init();
     //lora.setDeviceDefault();
+    lora.setDeviceReset();
   
     memset(buffer, 0, 256);
     lora.getVersion(buffer, 256, 1);
@@ -80,37 +82,44 @@ void setup(void)
     memset(buffer, 0, 256);
     lora.getId(buffer, 256, 1);
     SerialUSB.print(buffer);
-    //lora.loraDebug();
+
     //void setId(char *DevAddr, char *DevEUI, char *AppEUI);
     //void setKey(char *NwkSKey, char *AppSKey, char *AppKey);    
 
-    lora.setId(DEV_ADDR, DEV_EUI, APP_EUI);
-    lora.setKey(NWK_S_KEY, APP_S_KEY, APP_KEY);
+    //lora.setId(DEV_ADDR, DEV_EUI, APP_EUI); // NOT USED IN OTAA
+    lora.setId(NULL, DEV_EUI, APP_EUI);
+//  lora.setKey(NWK_S_KEY, APP_S_KEY, APP_KEY);
+    lora.setKey(NULL, NULL, APP_KEY);
     
-    lora.setDeciveMode(LWABP);
+    lora.setDeciveMode(LWOTAA);
     lora.setDataRate(DR0, US915HYBRID);
-    lora.setPower(MAX_EIRP_NDX_US);
+    //lora.setAdaptiveDataRate(true); 
     setHybridForTTN(US_hybrid_channels);
+    
+    //lora.setReceiceWindowFirst(0, 903.9);
     lora.setReceiceWindowFirst(1);
     lora.setReceiceWindowSecond(FREQ_RX_WNDW_SCND_US, DOWNLINK_DATA_RATE_US);
-    
+
+    lora.setDutyCycle(false);
+    lora.setJoinDutyCycle(true);
+    lora.setPower(MAX_EIRP_NDX_US);
+    while(!lora.setOTAAJoin(JOIN));
+    lora.loraDebug();
 }
 
 void setHybridForTTN(const float* channels){
-    
     for(int i = 0; i < 8; i++){
-        // DR0 is the min data rate
-        // US_RX_DR = DR3 is the max data rate for the US
         if(channels[i] != 0){
-          lora.setChannel(i, channels[i], UPLINK_DATA_RATE_MIN, UPLINK_DATA_RATE_MAX_US);
+            lora.setChannel(i, channels[i], UPLINK_DATA_RATE_MIN, UPLINK_DATA_RATE_MAX_US);
+         
         }
     }
 }
 
 void loop(void)
 {
+    //while(!lora.setOTAAJoin(JOIN));
     bool result = lora.transferPacket(&frame_counter, 1, DEFAULT_RESPONSE_TIMEOUT);
-    //lora.loraDebug();
     
     if(result)
     {
@@ -139,6 +148,6 @@ void loop(void)
         }
     }
   
-  //lora.loraDebug();
-  delay(1000);
+    lora.loraDebug();
+    delay(1000);
 }
