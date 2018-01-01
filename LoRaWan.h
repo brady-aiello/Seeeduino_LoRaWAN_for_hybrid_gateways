@@ -47,11 +47,9 @@
 
 #define BEFFER_LENGTH_MAX    256
 
-#define MAC_COMMAND_FLAG    "MACCMD:"
-
 
 enum _class_type_t { CLASS_A = 0, CLASS_C };
-enum _physical_type_t { EU434 = 0, EU868, US915, AU920, US915HYBRID };
+enum _physical_type_t { EU434 = 0, EU868, US915, US915HYBRID, AU915, AU915OLD, CN470, CN779, AS923, KR920, IN865 };
 enum _device_mode_t { LWABP = 0, LWOTAA, TEST };
 enum _otaa_join_cmd_t { JOIN = 0, FORCE };
 enum _window_delay_t { RECEIVE_DELAY1 = 0, RECEIVE_DELAY2, JOIN_ACCEPT_DELAY1, JOIN_ACCEPT_DELAY2 };
@@ -97,18 +95,7 @@ US915   0           SF10/125 kHz    980    | 0       30dBm
         12          SF8 /500 kHz    12500  | 10      10dBm
         13          SF7 /500 kHz    21900  | 11:15   RFU
         14:15       RFU                    | 
-*******************************************************************
-Type    DataRate    Configuration   BitRate| TxPower Configuration 
-CN780   0           SF12/125 kHz    250    | 0       10dBm
-        1           SF11/125 kHz    440    | 1       7 dBm
-        2           SF10/125 kHz    980    | 2       4 dBm
-        3           SF9 /125 kHz    1760   | 3       1 dBm
-        4           SF8 /125 kHz    3125   | 4       -2dBm
-        5           SF7 /125 kHz    5470   | 5       -5dBm
-        6           SF7 /250 kHz    11000  | 6:15    RFU
-        7           FSK:50 kbps     50000  | 
-        8:15        RFU                    | 
-******************************************************************/
+*******************************************************************/
 
 
 class LoRaWanClass
@@ -370,6 +357,7 @@ class LoRaWanClass
          *  \return Return null
          */
         void setReceiceWindowSecond(float frequency, _data_rate_t dataRate);
+        
         /**
          *  \brief Set receice window 2 channel mapping
          *  
@@ -380,6 +368,24 @@ class LoRaWanClass
          *  \return Return null
          */
         void setReceiceWindowSecond(float frequency, _spreading_factor_t spreadingFactor, _band_width_t bandwidth);
+        
+        /**
+         *  \brief ON/OFF duty cycle limitation
+         *  
+         *  \param [in] command The true : ON, false OFF
+         *  
+         *  \return Return null
+         */
+        void setDutyCycle(bool command);
+        
+        /**
+         *  \brief ON/OFF join duty cycle limitation
+         *  
+         *  \param [in] command The true : ON, false OFF
+         *  
+         *  \return Return null
+         */
+        void setJoinDutyCycle(bool command);
         
         /**
          *  \brief Set receice window delay

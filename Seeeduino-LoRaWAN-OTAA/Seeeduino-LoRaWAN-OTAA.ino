@@ -63,6 +63,8 @@ const float AS2_hybrid_channels[8] = {923.2, 923.4, 923.6, 923.8, 924.0, 924.2, 
 
 #define DEFAULT_RESPONSE_TIMEOUT 5
 unsigned char frame_counter = 1;
+int loopcount = 0;
+
 char buffer[256];
 
 
@@ -72,7 +74,6 @@ void setup(void)
     while(!SerialUSB);     
     
     lora.init();
-    //lora.setDeviceDefault();
     lora.setDeviceReset();
   
     memset(buffer, 0, 256);
@@ -83,12 +84,7 @@ void setup(void)
     lora.getId(buffer, 256, 1);
     SerialUSB.print(buffer);
 
-    //void setId(char *DevAddr, char *DevEUI, char *AppEUI);
-    //void setKey(char *NwkSKey, char *AppSKey, char *AppKey);    
-
-    //lora.setId(DEV_ADDR, DEV_EUI, APP_EUI); // NOT USED IN OTAA
     lora.setId(NULL, DEV_EUI, APP_EUI);
-//  lora.setKey(NWK_S_KEY, APP_S_KEY, APP_KEY);
     lora.setKey(NULL, NULL, APP_KEY);
     
     lora.setDeciveMode(LWOTAA);
@@ -96,15 +92,25 @@ void setup(void)
     //lora.setAdaptiveDataRate(true); 
     setHybridForTTN(US_hybrid_channels);
     
-    //lora.setReceiceWindowFirst(0, 903.9);
-    lora.setReceiceWindowFirst(1);
+    lora.setReceiceWindowFirst(0,  US_hybrid_channels[0]);
     lora.setReceiceWindowSecond(FREQ_RX_WNDW_SCND_US, DOWNLINK_DATA_RATE_US);
 
     lora.setDutyCycle(false);
-    lora.setJoinDutyCycle(true);
+    lora.setJoinDutyCycle(false);
     lora.setPower(MAX_EIRP_NDX_US);
+
+//        SerialUSB.print("Starting OTTA Join.\n");
+//    loopcount = 0;
+//    while(true) {
+//        loopcount++;
+//        if (lora.setOTAAJoin(JOIN))
+//            break;
+//    }
+//    SerialUSB.print("Took ");
+//    SerialUSB.print(loopcount);
+//    SerialUSB.println(" tries to join.");
     while(!lora.setOTAAJoin(JOIN));
-    lora.loraDebug();
+    //lora.loraDebug();
 }
 
 void setHybridForTTN(const float* channels){
@@ -118,9 +124,9 @@ void setHybridForTTN(const float* channels){
 
 void loop(void)
 {
-    //while(!lora.setOTAAJoin(JOIN));
+    while(!lora.setOTAAJoin(JOIN));
     bool result = lora.transferPacket(&frame_counter, 1, DEFAULT_RESPONSE_TIMEOUT);
-    
+
     if(result)
     {
         delay(50);

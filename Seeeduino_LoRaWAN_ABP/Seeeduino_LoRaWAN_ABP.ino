@@ -1,4 +1,4 @@
-#include "LoRaWan.h"
+#include <LoRaWan.h>
 #include "keys.h"
 
 #define FREQ_RX_WNDW_SCND_US  923.3
@@ -67,11 +67,11 @@ char buffer[256];
 
 void setup(void)
 {
-//    SerialUSB.begin(115200);
-//    while(!SerialUSB);     
+    SerialUSB.begin(115200);
+    while(!SerialUSB);     
     
     lora.init();
-    //lora.setDeviceDefault();
+    lora.setDeviceDefault();
   
     memset(buffer, 0, 256);
     lora.getVersion(buffer, 256, 1);
@@ -93,7 +93,6 @@ void setup(void)
     setHybridForTTN(US_hybrid_channels);
     lora.setReceiceWindowFirst(1);
     lora.setReceiceWindowSecond(FREQ_RX_WNDW_SCND_US, DOWNLINK_DATA_RATE_US);
-    
 }
 
 void setHybridForTTN(const float* channels){
@@ -110,7 +109,7 @@ void setHybridForTTN(const float* channels){
 void loop(void)
 {
     bool result = lora.transferPacket(&frame_counter, 1, DEFAULT_RESPONSE_TIMEOUT);
-    //lora.loraDebug();
+    lora.loraDebug();
     
     if(result)
     {
@@ -139,6 +138,6 @@ void loop(void)
         }
     }
   
-  //lora.loraDebug();
+  lora.loraDebug();
   delay(1000);
 }

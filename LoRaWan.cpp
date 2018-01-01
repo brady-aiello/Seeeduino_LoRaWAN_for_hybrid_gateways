@@ -135,8 +135,14 @@ void LoRaWanClass::setDataRate(_data_rate_t dataRate, _physical_type_t physicalT
     if(physicalType == EU434)sendCommand("AT+DR=EU433\r\n");
     else if(physicalType == EU868)sendCommand("AT+DR=EU868\r\n");
     else if(physicalType == US915)sendCommand("AT+DR=US915\r\n");
-    else if(physicalType == AU920)sendCommand("AT+DR=AU920\r\n");
-	else if(physicalType == US915HYBRID)sendCommand("AT+DR=US915HYBRID\r\n");
+    else if(physicalType == US915HYBRID)sendCommand("AT+DR=US915HYBRID\r\n");
+    else if(physicalType == AU915)sendCommand("AT+DR=AU915\r\n");
+	else if(physicalType == AU915OLD)sendCommand("AT+DR=AU915OLD\r\n");
+    else if(physicalType == CN470)sendCommand("AT+DR=CN470\r\n");
+    else if(physicalType == CN779)sendCommand("AT+DR=CN779\r\n");
+    else if(physicalType == AS923)sendCommand("AT+DR=AS923\r\n");
+    else if(physicalType == KR920)sendCommand("AT+DR=KR920\r\n");
+    else if(physicalType == IN865)sendCommand("AT+DR=IN865\r\n");
 	
 #if _DEBUG_SERIAL_
     loraDebugPrint(DEFAULT_DEBUGTIME);
@@ -322,15 +328,20 @@ short LoRaWanClass::receivePacket(char *buffer, short length, short *rssi)
     
     ptr = strstr(_buffer, "RX: \"");
     if(ptr)
-    {
+    {        
         ptr += 5;
+        
+        uint8_t bitStep = 0;
+        if(*(ptr + 2) == ' ')bitStep = 3; // Firmware version 2.0.10
+        else bitStep = 2;                   // Firmware version 2.1.15
+        
         for(short i = 0; ; i ++)
         {
             char temp[2] = {0};
             unsigned char tmp, result = 0;
             
-            temp[0] = *(ptr + i * 3);
-            temp[1] = *(ptr + i * 3 + 1);
+            temp[0] = *(ptr + i * bitStep);
+            temp[1] = *(ptr + i * bitStep + 1);
            
             for(unsigned char j = 0; j < 2; j ++)
             {
@@ -345,57 +356,15 @@ short LoRaWanClass::receivePacket(char *buffer, short length, short *rssi)
             }
             
             if(i < length)buffer[i] = result;
-            
-            if(*(ptr + i * 3 + 3) == '\"' && *(ptr + i * 3 + 4) == '\r' && *(ptr + i * 3 + 5) == '\n')
+
+            if(*(ptr + (i + 1) * bitStep) == '\"' && *(ptr + (i + 1) * bitStep + 1) == '\r' && *(ptr + (i + 1) * bitStep + 2) == '\n')
             {
                 number = i + 1;
                 break;
             }
         }        
     }
-    
-    ptr = strstr(_buffer, "MACCMD: \"");
-    if(ptr)
-    {
-        buffer[0] = 'M';
-        buffer[1] = 'A';
-        buffer[2] = 'C';
-        buffer[3] = 'C';
-        buffer[4] = 'M';
-        buffer[5] = 'D';
-        buffer[6] = ':';
-
-        ptr += 9;
-        for(short i = 0; ; i ++)
-        {
-            char temp[2] = {0};
-            unsigned char tmp, result = 0;
-            
-            temp[0] = *(ptr + i * 3);
-            temp[1] = *(ptr + i * 3 + 1);
-           
-            for(unsigned char j = 0; j < 2; j ++)
-            {
-                if((temp[j] >= '0') && (temp[j] <= '9'))
-                tmp = temp[j] - '0';
-                else if((temp[j] >= 'A') && (temp[j] <= 'F'))
-                tmp = temp[j] - 'A' + 10;
-                else if((temp[j] >= 'a') && (temp[j] <= 'f'))
-                tmp = temp[j] - 'a' + 10;
-
-                result = result * 16 + tmp;
-            }
-            
-            if((i + 7) < length)buffer[i + 7] = result;
-            
-            if(*(ptr + i * 3 + 3) == '\"' && *(ptr + i * 3 + 4) == '\r' && *(ptr + i * 3 + 5) == '\n')
-            {
-                number = i + 1 + 7;
-                break;
-            }
-        }        
-    }
-    
+       
     memset(_buffer, 0, BEFFER_LENGTH_MAX);
     
     return number;
@@ -519,6 +488,26 @@ void LoRaWanClass::setReceiceWindowSecond(float frequency, _spreading_factor_t s
     memset(cmd, 0, 32);
     sprintf(cmd, "AT+RXWIN2=%d.%d,%d,%d\r\n", (short)frequency, short(frequency * 10) % 10, spreadingFactor, bandwidth);
     sendCommand(cmd);
+#if _DEBUG_SERIAL_
+    loraDebugPrint(DEFAULT_DEBUGTIME);
+#endif
+    delay(DEFAULT_TIMEWAIT);
+}
+
+void LoRaWanClass::setDutyCycle(bool command)
+{
+    if(command)sendCommand("AT+LW=DC, ON\r\n");
+    else sendCommand("AT+LW=DC, OFF\r\n");  
+#if _DEBUG_SERIAL_
+    loraDebugPrint(DEFAULT_DEBUGTIME);
+#endif
+    delay(DEFAULT_TIMEWAIT);
+}
+
+void LoRaWanClass::setJoinDutyCycle(bool command)
+{
+    if(command)sendCommand("AT+LW=JDC,ON\r\n");
+    else sendCommand("AT+LW=JDC,OFF\r\n");  
 #if _DEBUG_SERIAL_
     loraDebugPrint(DEFAULT_DEBUGTIME);
 #endif
@@ -691,13 +680,18 @@ short LoRaWanClass::receivePacketP2PMode(unsigned char *buffer, short length, sh
     if(ptr)
     {
         ptr += 4;
+        
+        uint8_t bitStep = 0;
+        if(*(ptr + 2) == ' ')bitStep = 3; // Firmware version 2.0.10
+        else bitStep = 2;                   // Firmware version 2.1.15
+        
         for(short i = 0; i < number; i ++)
         {
             char temp[2] = {0};
             unsigned char tmp, result = 0;
             
-            temp[0] = *(ptr + i * 3);
-            temp[1] = *(ptr + i * 3 + 1);
+            temp[0] = *(ptr + i * bitStep);
+            temp[1] = *(ptr + i * bitStep + 1);
            
             for(unsigned char j = 0; j < 2; j ++)
             {
