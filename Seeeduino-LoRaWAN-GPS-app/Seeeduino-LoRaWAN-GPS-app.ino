@@ -22,8 +22,13 @@ int sec = 0;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
-float *latlong;
-unsigned char *latlongbytes;
+typedef union {
+    float f[2];         // Assigning fVal.f will also populate fVal.bytes;
+    unsigned char bytes[8];   // Both fVal.f and fVal.bytes share the same 4 bytes of memory.
+} floatArr2Val;
+
+floatArr2Val latlong;
+
 float latitude;
 float longitude;
 
@@ -44,9 +49,11 @@ void displayInfo()
       SerialUSB.println("Got real lon");
     }
     SerialUSB.print(F("Location: ")); 
-    SerialUSB.print(latitude, 6);
+    SerialUSB.print(latlong.f[0], 6);
+    //SerialUSB.print(latitude, 6);
     SerialUSB.print(F(","));
-    SerialUSB.print(longitude, 6);
+    SerialUSB.print(latlong.f[1], 6);
+    //SerialUSB.print(longitude, 6);
     SerialUSB.println();
 }
 
@@ -110,22 +117,22 @@ void setup()
 {
     Serial.begin(9600);
     SerialUSB.begin(115200);
-    latlong = (float *)calloc(8,1);
-    latlongbytes = (unsigned char*)latlong;
+    
     memset(buffer, 0, 256);
     setupLoRaABP();
     //setupLoRaOTAA();
-    //TimerTcc0.initialize(60000000); 1 Minute
+  //TimerTcc0.initialize(60000000); 1 Minute
     TimerTcc0.initialize(10000000); //10 seconds
     TimerTcc0.attachInterrupt(timerIsr);
 }
 
 void loop()
 {
-    if (sec == 3){
-      //Serial.write("h");
-    }
-    if (sec >= 4 ) {
+  
+//    if (sec == 3){
+//      //Serial.write("h"); //Turn on GPS
+//    }
+    if (sec <= 2 ) {
         while (Serial.available() > 0){
             char currChar = Serial.read();
             SerialUSB.print(currChar);
@@ -133,19 +140,20 @@ void loop()
         }
         latitude  = gps.location.lat();
         longitude = gps.location.lng();
-        if((latitude && longitude) && latitude != latlong[0]
-            && longitude != latlong[1]){     
-            latlong[0] = latitude;
-            latlong[1] = longitude;
+        if((latitude && longitude) && latitude != latlong.f[0]
+            && longitude != latlong.f[1]){     
+            latlong.f[0] = latitude;
+            latlong.f[1] = longitude;
             
-            SerialUSB.print("LatLong: ");
+            SerialUSB.println("LatLong: ");
             for(int i = 0; i < 8; i++){
-                SerialUSB.write(latlongbytes + i, 1);
+                SerialUSB.print(latlong.bytes[i], HEX);
             }
-            bool result = lora.transferPacket((unsigned char*)latlong, (char)8, (char)DEFAULT_RESPONSE_TIMEOUT);
+            SerialUSB.println("");
+            bool result = lora.transferPacket(latlong.bytes, 8, DEFAULT_RESPONSE_TIMEOUT);
         }
     }
-    else if (sec == 1 ){
-        //Serial.write("$PMTK161,0*28\r\n");
-    }
+//    else if (sec == 5 ){
+//        //Serial.write("$PMTK161,0*28\r\n"); //Put GPS to sleep
+//    }
 }
