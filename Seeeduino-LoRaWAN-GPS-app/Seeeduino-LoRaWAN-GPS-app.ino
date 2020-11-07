@@ -6,7 +6,6 @@
 #define FREQ_RX_WNDW_SCND_US  923.3
 const float US_hybrid_channels[8] = {903.9, 904.1, 904.3, 904.5, 904.7, 904.9, 905.1, 905.3}; //rx 923.3
 #define DOWNLINK_DATA_RATE_US DR8
-#define US_RX_DR DR8
 #define UPLINK_DATA_RATE_MAX_US  DR3
 #define MAX_EIRP_NDX_US 13
 #define UPLINK_DATA_RATE_MIN DR0

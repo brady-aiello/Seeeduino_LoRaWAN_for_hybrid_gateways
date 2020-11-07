@@ -29,15 +29,6 @@ const float AS2_hybrid_channels[8] = {923.2, 923.4, 923.6, 923.8, 924.0, 924.2, 
 //#define DOWNLINK_DATA_RATE_AS1 DR2
 //#define DOWNLINK_DATA_RATE_AS2 DR2
 
-#define US_RX_DR DR8
-//#define EU_RX_DR DR8
-//#define AU_RX_DR DR8
-//#define CN_RX_DR DR0
-//#define KR_RX_DR DR0
-//#define IN_RX_DR DR2
-//#define AS1_RX_DR DR2
-//#define AS2_RX_DR DR2
-
 //United States max data rate for uplink channels = DR3
 #define UPLINK_DATA_RATE_MAX_US  DR3
 //#define UPLINK_DATA_RATE_MAX_EU  DR5
@@ -99,7 +90,7 @@ void setHybridForTTN(const float* channels){
     
     for(int i = 0; i < 8; i++){
         // DR0 is the min data rate
-        // US_RX_DR = DR3 is the max data rate for the US
+        // UPLINK_DATA_RATE_MAX_US = DR3 is the max data rate for the US
         if(channels[i] != 0){
           lora.setChannel(i, channels[i], UPLINK_DATA_RATE_MIN, UPLINK_DATA_RATE_MAX_US);
         }
